@@ -45,18 +45,18 @@ def main():
     allow_gpu_growth_memory()
 
     #input parameter
-    path_to_images = "/Datasets/Linemod_preprocessed/data/02/rgb/"
+    path_to_images = "/home/phil/Code/atp_dataset_5/pictures"
     image_extension = ".png"
     phi = 0
-    path_to_weights = "./weights/phi_0_occlusion_best_ADD(-S).h5"
-    save_path = "./predictions/occlusion/" #where to save the images or None if the images should be displayed and not saved
+    path_to_weights = "/home/phil/Code/EfficientPose/checkpoints/weights_412.h5"
+    save_path = "/home/phil/Code/atp_dataset_5/pictures/predictions_412/" #where to save the images or None if the images should be displayed and not saved
     # save_path = None
-    class_to_name = {0: "ape", 1: "can", 2: "cat", 3: "driller", 4: "duck", 5: "eggbox", 6: "glue", 7: "holepuncher"} #Occlusion
-    #class_to_name = {0: "driller"} #Linemod use a single class with a name of the Linemod objects
-    score_threshold = 0.5
+    # class_to_name = {0: "ape", 1: "can", 2: "cat", 3: "driller", 4: "duck", 5: "eggbox", 6: "glue", 7: "holepuncher"} #Occlusion
+    class_to_name = {0: "pyramide", 1: "platte", 2: "wuerfel", 3: "adapter", 4: "kugel"}
+    score_threshold = 0.7
     translation_scale_norm = 1000.0
     draw_bbox_2d = False
-    draw_name = False
+    draw_name = True
     #for the linemod and occlusion trained models take this camera matrix and these 3d models. in case you trained a model on a custom dataset you need to take the camera matrix and 3d cuboids from your custom dataset.
     camera_matrix = get_linemod_camera_matrix()
     name_to_3d_bboxes = get_linemod_3d_bboxes()
@@ -109,7 +109,7 @@ def main():
         else:
             #only save images to the given path
             os.makedirs(save_path, exist_ok = True)
-            cv2.imwrite(os.path.join(save_path, image_filename.replace(image_extension, "_predicted" + image_extension)), original_image)
+            cv2.imwrite(os.path.join(save_path, image_filename.replace(image_extension, "_predicted_calibrated" + image_extension)), original_image)
             
             
 def allow_gpu_growth_memory():
@@ -128,7 +128,11 @@ def get_linemod_camera_matrix():
         The Linemod and Occlusion 3x3 camera matrix
 
     """
-    return np.array([[572.4114, 0., 325.2611], [0., 573.57043, 242.04899], [0., 0., 1.]], dtype = np.float32)
+    #return np.array([[572.4114, 0., 325.2611], [0., 573.57043, 242.04899], [0., 0., 1.]], dtype = np.float32)  # Linemod
+    return np.array([[256, 0., 256], [0., 256, 256], [0., 0., 1.]], dtype = np.float32)       # NDDS
+    #return np.array([[821.993, 0., 330.489], [0., 821.993, 248.997], [0., 0., 1.]], dtype = np.float32)       # Logitech C310
+    #return np.array([[180, 0., 50], [0., 180, 130], [0., 0., 1.]], dtype = np.float32)
+
 
 
 def get_linemod_3d_bboxes():
@@ -137,7 +141,12 @@ def get_linemod_3d_bboxes():
         name_to_3d_bboxes: Dictionary with the Linemod and Occlusion 3D model names as keys and the cuboids as values
 
     """
-    name_to_model_info = {"ape":            {"diameter": 102.09865663, "min_x": -37.93430000, "min_y": -38.79960000, "min_z": -45.88450000, "size_x": 75.86860000, "size_y": 77.59920000, "size_z": 91.76900000},
+    name_to_model_info = {  'platte':       {'diameter': 169.0739, 'min_x': -67.5, 'min_y': -50.0, 'min_z': -1.0, 'size_x': 135.0, 'size_y': 100.0, 'size_z': 19.0},
+                            'pyramide':     {'diameter': 106.972, 'min_x': -1.0, 'min_y': -1.0, 'min_z': -39.5, 'size_x': 51.0, 'size_y': 51.0, 'size_z': 79.0},
+                            'wuerfel':      {'diameter': 103.6388, 'min_x': -39.5, 'min_y': -30.0, 'min_z': -15.0, 'size_x': 79.0, 'size_y': 60.0, 'size_z': 30.0},
+                            'adapter':      {'diameter': 26.5579, 'min_x': -7.3, 'min_y': -4.8, 'min_z': -10.0, 'size_x': 14.6, 'size_y': 9.6, 'size_z': 20.0},
+                            'kugel':        {'diameter': 93.3833, 'min_x': -30.0, 'min_y': 0.0, 'min_z': -30.0, 'size_x': 60.0, 'size_y': 38.9928, 'size_z': 60.0},
+                            "ape":          {"diameter": 102.09865663, "min_x": -37.93430000, "min_y": -38.79960000, "min_z": -45.88450000, "size_x": 75.86860000, "size_y": 77.59920000, "size_z": 91.76900000},
                             "benchvise":    {"diameter": 247.50624233, "min_x": -107.83500000, "min_y": -60.92790000, "min_z": -109.70500000, "size_x": 215.67000000, "size_y": 121.85570000, "size_z": 219.41000000},
                             "cam":          {"diameter": 172.49224865, "min_x": -68.32970000, "min_y": -71.51510000, "min_z": -50.24850000, "size_x": 136.65940000, "size_y": 143.03020000, "size_z": 100.49700000},
                             "can":          {"diameter": 201.40358597, "min_x": -50.39580000, "min_y": -90.89790000, "min_z": -96.86700000, "size_x": 100.79160000, "size_y": 181.79580000, "size_z": 193.73400000},
@@ -305,6 +314,13 @@ def postprocess(boxes, scores, labels, rotations, translations, scale, score_thr
     rotations = rotations[indices]
     translations = translations[indices]
     labels = labels[indices]
+
+    # Print Output 
+    print('Boxes:\n', boxes)
+    print('Scores:\n', scores)
+    print('Labels:\n', labels)
+    print('Rotations:\n', rotations)
+    print('Translations:\n', translations)
     
     return boxes, scores, labels, rotations, translations
 

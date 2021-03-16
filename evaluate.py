@@ -62,6 +62,12 @@ def parse_args(args):
     occlusion_parser = subparsers.add_parser('occlusion')
     occlusion_parser.add_argument('occlusion_path', help = 'Path to dataset directory (ie. /Datasets/Linemod_preprocessed).')
 
+    own_dataset_parser = subparsers.add_parser('atp_dataset')
+    own_dataset_parser.add_argument('own_dataset_path', help = 'Path to dataset directory (ie. /Datasets/own_dataset).')
+
+    atp_dataset_parser = subparsers.add_parser('atp_dataset')
+    atp_dataset_parser.add_argument('atp_dataset_path', help = 'Path to dataset directory (ie. /Datasets/atp_dataset).')
+
     parser.add_argument('--rotation-representation', help = 'Which representation of the rotation should be used. Choose from "axis_angle", "rotation_matrix" and "quaternion"', default = 'axis_angle')
 
     parser.add_argument('--weights', help = 'File containing weights to init the model parameter')
@@ -168,6 +174,34 @@ def create_generators(args):
         
         generator = OcclusionGenerator(
             args.occlusion_path,
+            train = False,
+            shuffle_dataset = False,
+            shuffle_groups = False,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = False,
+            use_6DoF_augmentation = False,
+            **common_args
+        )
+
+    elif args.dataset_type == 'own_dataset':
+        from generators.own_dataset import OcclusionGenerator
+        
+        generator = OcclusionGenerator(
+            args.own_dataset_path,
+            train = False,
+            shuffle_dataset = False,
+            shuffle_groups = False,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = False,
+            use_6DoF_augmentation = False,
+            **common_args
+        )
+
+    elif args.dataset_type == 'atp_dataset':
+        from generators.atp_dataset import OcclusionGenerator
+        
+        generator = OcclusionGenerator(
+            args.atp_dataset_path,
             train = False,
             shuffle_dataset = False,
             shuffle_groups = False,

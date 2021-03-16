@@ -46,7 +46,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.optimizers import Adam
 
-from model import build_EfficientPose
+from model import build_EfficientPose                           # See model.py: Information about model-architecture
 from losses import smooth_l1, focal, transformation_loss
 from efficientnet import BASE_WEIGHTS_PATH, WEIGHTS_HASHES
 
@@ -59,7 +59,7 @@ def parse_args(args):
     """
     date_and_time = time.strftime("%d_%m_%Y_%H_%M_%S")
     parser = argparse.ArgumentParser(description = 'Simple EfficientPose training script.')
-    subparsers = parser.add_subparsers(help = 'Arguments for specific dataset types.', dest = 'dataset_type')
+    subparsers = parser.add_subparsers(help = 'Arguments for specific dataset types.', dest = 'dataset_type')   # Subparser -> dataset_typ (linemod, occlusion, own_dataset)
     subparsers.required = True
     
     linemod_parser = subparsers.add_parser('linemod')
@@ -68,6 +68,12 @@ def parse_args(args):
     
     occlusion_parser = subparsers.add_parser('occlusion')
     occlusion_parser.add_argument('occlusion_path', help = 'Path to dataset directory (ie. /Datasets/Linemod_preprocessed/).')
+
+    own_dataset_parser = subparsers.add_parser('own_dataset')
+    own_dataset_parser.add_argument('own_dataset_path', help = 'Path to dataset directory (ie. /Datasets/Linemod_preprocessed/).')
+
+    atp_dataset_parser = subparsers.add_parser('atp_dataset')
+    atp_dataset_parser.add_argument('atp_dataset_path', help = 'Path to dataset directory (ie. /Datasets/Linemod_preprocessed/).')
 
     parser.add_argument('--rotation-representation', help = 'Which representation of the rotation should be used. Choose from "axis_angle", "rotation_matrix" and "quaternion"', default = 'axis_angle')    
 
@@ -223,6 +229,7 @@ def create_callbacks(training_model, prediction_model, validation_generator, arg
 
     tensorboard_callback = None
     
+    # linemod
     if args.dataset_type == "linemod":
         snapshot_path = os.path.join(args.snapshot_path, "object_" + str(args.object_id))
         if args.validation_image_save_path:
@@ -238,6 +245,8 @@ def create_callbacks(training_model, prediction_model, validation_generator, arg
         else:
             metric_to_monitor = "ADD"
             mode = "max"
+
+    # occlusion
     elif args.dataset_type == "occlusion":
         snapshot_path = os.path.join(args.snapshot_path, "occlusion")
         if args.validation_image_save_path:
@@ -246,6 +255,32 @@ def create_callbacks(training_model, prediction_model, validation_generator, arg
             save_path = args.validation_image_save_path
         if args.tensorboard_dir:
             tensorboard_dir = os.path.join(args.tensorboard_dir, "occlusion")
+            
+        metric_to_monitor = "ADD(-S)"
+        mode = "max"
+
+    # own_dataset
+    elif args.dataset_type == "own_dataset":
+        snapshot_path = os.path.join(args.snapshot_path, "own_dataset")
+        if args.validation_image_save_path:
+            save_path = os.path.join(args.validation_image_save_path, "own_dataset")
+        else:
+            save_path = args.validation_image_save_path
+        if args.tensorboard_dir:
+            tensorboard_dir = os.path.join(args.tensorboard_dir, "own_dataset")
+            
+        metric_to_monitor = "ADD(-S)"
+        mode = "max"
+
+    # atp_dataset
+    elif args.dataset_type == "atp_dataset":
+        snapshot_path = os.path.join(args.snapshot_path, "atp_dataset")
+        if args.validation_image_save_path:
+            save_path = os.path.join(args.validation_image_save_path, "atp_dataset")
+        else:
+            save_path = args.validation_image_save_path
+        if args.tensorboard_dir:
+            tensorboard_dir = os.path.join(args.tensorboard_dir, "atp_dataset")
             
         metric_to_monitor = "ADD(-S)"
         mode = "max"
@@ -350,6 +385,46 @@ def create_generators(args):
 
         validation_generator = OcclusionGenerator(
             args.occlusion_path,
+            train = False,
+            shuffle_dataset = False,
+            shuffle_groups = False,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = False,
+            use_6DoF_augmentation = False,
+            **common_args
+        )
+    elif args.dataset_type == 'own_dataset':
+        from generators.own_dataset import OcclusionGenerator
+        train_generator = OcclusionGenerator(
+            args.own_dataset_path,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = not args.no_color_augmentation,
+            use_6DoF_augmentation = not args.no_6dof_augmentation,
+            **common_args
+        )
+
+        validation_generator = OcclusionGenerator(
+            args.own_dataset_path,
+            train = False,
+            shuffle_dataset = False,
+            shuffle_groups = False,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = False,
+            use_6DoF_augmentation = False,
+            **common_args
+        )
+    elif args.dataset_type == 'atp_dataset':
+        from generators.atp_dataset import OcclusionGenerator
+        train_generator = OcclusionGenerator(
+            args.atp_dataset_path,
+            rotation_representation = args.rotation_representation,
+            use_colorspace_augmentation = not args.no_color_augmentation,
+            use_6DoF_augmentation = not args.no_6dof_augmentation,
+            **common_args
+        )
+
+        validation_generator = OcclusionGenerator(
+            args.atp_dataset_path,
             train = False,
             shuffle_dataset = False,
             shuffle_groups = False,
