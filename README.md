@@ -1,4 +1,8 @@
+# EfficientPose Fork
+This is a fork from the original EfficientPose. This Fork was used for a university project. The goal was to determine the class and pose of several objects. Therefore, I created some new generators and changed some code in the train, evaluate, inference and inference_webcam files.
+
 # EfficientPose
+(Original Readme...)
 This is the official implementation of [EfficientPose](https://arxiv.org/abs/2011.04307). 
 We based our work on the Keras EfficientDet implementation [xuannianz/EfficientDet](https://github.com/xuannianz/EfficientDet) which again builds up on the great Keras RetinaNet implementation [fizyr/keras-retinanet](https://github.com/fizyr/keras-retinanet), the official EfficientDet implementation [google/automl](https://github.com/google/automl) and [qubvel/efficientnet](https://github.com/qubvel/efficientnet).
 
